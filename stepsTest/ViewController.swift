@@ -2,26 +2,50 @@
 //  ViewController.swift
 //  stepsTest
 //
-//  Created by User on 20/12/20.
+//  Created by Orestis Apostolou on 20/12/20.
 //
 
 import UIKit
 import HealthKit
+import Charts
 
 
 
 class ViewController: UIViewController {
     
     let healthStore = HKHealthStore()
+    lazy var mainTitleLabel = UILabel()
+    lazy var currentECGLineChart = LineChartView()
+    lazy var contentView = UIView()
     
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        // add title ECG
+        
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(contentView)
+        contentView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        contentView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        contentView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        mainTitleLabel.text = "ECG"
+        mainTitleLabel.textAlignment = .center
+        mainTitleLabel.font = UIFont.boldSystemFont(ofSize: 35)
+        mainTitleLabel.sizeToFit()
+        mainTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(mainTitleLabel)
+        mainTitleLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 0).isActive = true
+        mainTitleLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: 0).isActive = true
+        mainTitleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 40).isActive = true
+        mainTitleLabel.heightAnchor.constraint(equalTo: mainTitleLabel.heightAnchor, constant: 0).isActive = true
+    }
     
-    
-    
-    
-    @IBOutlet weak var stepsCountLabel: UILabel!
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.translatesAutoresizingMaskIntoConstraints = false
         
         var ecgSamples = [(Double,Double)] ()
         
@@ -29,10 +53,17 @@ class ViewController: UIViewController {
         
         healthStore.requestAuthorization(toShare: nil, read: healthKitTypes) { (bool, error) in
             if (bool) {
+                
                 //authorization succesful
+                
                 self.getECGs { (ecgResults) in
-                    print(ecgResults.count)
-                    print(ecgResults[100].0)
+                    DispatchQueue.main.async {
+                        ecgSamples = ecgResults
+                        print(ecgResults.count)
+                        print(ecgResults[100].1)
+                        self.updateCharts(ecgSamples: ecgResults)
+                    }
+                    
                 }
                 
                 
@@ -77,6 +108,43 @@ class ViewController: UIViewController {
         self.healthStore.execute(ecgQuery)
         print("everything working here")
         print(ecgSamples.count)
+    }
+    
+    func updateCharts(ecgSamples : [(Double,Double)]) {
+        if !ecgSamples.isEmpty {
+            let screenWidth = UIScreen.main.bounds.width
+            let screenHeight = UIScreen.main.bounds.height
+            
+            // add line chart with constraints
+            
+            currentECGLineChart.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(currentECGLineChart)
+            currentECGLineChart.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
+            currentECGLineChart.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20).isActive = true
+            currentECGLineChart.topAnchor.constraint(equalTo: mainTitleLabel.bottomAnchor, constant: 10).isActive = true
+            currentECGLineChart.heightAnchor.constraint(equalToConstant: view.frame.size.width + -115).isActive = true
+            
+            // customize line chart and add data
+            
+            
+            var entries = [ChartDataEntry] ()
+            for i in 0...ecgSamples.count-1 {
+                entries.append(ChartDataEntry(x: ecgSamples[i].1, y: ecgSamples[i].0))
+            }
+            let set1 = LineChartDataSet(entries: entries, label: "ECG data")
+            set1.drawCirclesEnabled = false
+            let data = LineChartData(dataSet: set1)
+            self.currentECGLineChart.data = data
+            currentECGLineChart.setVisibleXRangeMaximum(10)
+            
+            currentECGLineChart.rightAxis.enabled = false
+            let yAxis = currentECGLineChart.leftAxis
+            set1.colors = [UIColor.systemRed]
+            currentECGLineChart.animate(xAxisDuration: 1.0)
+            
+            currentECGLineChart.xAxis.labelPosition = .bottom
+        }
+        
     }
     
 }
