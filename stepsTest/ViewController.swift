@@ -21,6 +21,7 @@ class ViewController: UIViewController {
     lazy var mainTitleLabel = UILabel()
     lazy var currentECGLineChart = LineChartView()
     lazy var contentView = UIView()
+    lazy var analyzeButton = UIButton(type: .system)
     var pickerView = UIPickerView()
     
     override func viewWillLayoutSubviews() {
@@ -186,6 +187,19 @@ class ViewController: UIViewController {
             currentECGLineChart.topAnchor.constraint(equalTo: pickerView.bottomAnchor, constant: 10).isActive = true
             currentECGLineChart.heightAnchor.constraint(equalToConstant: view.frame.size.width + -115).isActive = true
             
+            analyzeButton.translatesAutoresizingMaskIntoConstraints = false
+            analyzeButton.setTitle("Analyze ECG", for: .normal)
+//            analyzeButton.setTitleColor(.label, for: .normal)
+//            analyzeButton.showsTouchWhenHighlighted = true
+            contentView.addSubview(analyzeButton)
+            analyzeButton.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
+            analyzeButton.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20).isActive = true
+//            analyzeButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 10).isActive = true
+            analyzeButton.topAnchor.constraint(equalTo: currentECGLineChart.bottomAnchor, constant: 10).isActive = true
+            analyzeButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+//            analyzeButton.heightAnchor.constraint(equalToConstant: 30.0)
+            analyzeButton.addTarget(self, action: #selector(analyzeButtonPressed), for: .touchUpInside)
+            
             // customize line chart and add data
             
             
@@ -210,6 +224,12 @@ class ViewController: UIViewController {
         }
         
     }
+    
+    @objc func analyzeButtonPressed() {
+        print("Analyze button pressed!")
+        print(pickerView.selectedRow(inComponent: 0))
+    }
+
     
 }
 
